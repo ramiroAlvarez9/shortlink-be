@@ -1,6 +1,8 @@
 mod controllers;
 use actix_web::{web, App, HttpServer, Responder};
 use controllers::link_controller::create_link;
+use controllers::link_controller::get_link;
+use controllers::link_controller::delete_link;
 use dotenv::dotenv;
 use std::env;
 use tokio_postgres::{Error, NoTls};
@@ -32,13 +34,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     client.batch_execute("SELECT 1").await?;
     println!("Database connected successfully!");
+   
+
    let client_data = web::Data::new(client); 
 
    HttpServer::new(move || {
         App::new()
             .app_data(client_data.clone())
             .route("/create", web::post().to(create_link))
-    })
+            .route("/{id}", web::get().to(get_link))
+            .route("/{id}", web::delete().to(delete_link))
+     })
     .bind(format!("{}:{}", host, port))?
     .run()
     .await?;
