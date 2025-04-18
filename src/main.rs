@@ -1,27 +1,34 @@
 mod controllers;
-use actix_web::{web, App, HttpServer, Responder};
+use actix_web::{web, App, HttpServer};
 use controllers::link_controller::create_link;
 use controllers::link_controller::get_link;
 use controllers::link_controller::delete_link;
 use dotenv::dotenv;
 use std::env;
-use tokio_postgres::{Error, NoTls};
+use tokio_postgres::NoTls;
 
 
 #[actix_web::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
 
-    let host = env::var("SERVER_HOST").unwrap();
-    let port = env::var("SERVER_PORT").unwrap();
+    let server_config = (
+        env::var("SERVER_HOST")?,
+        env::var("SERVER_PORT")?,
+    );
+    
+    let db_config = (
+        env::var("DB_HOST")?,
+        env::var("DB_PORT")?,
+        env::var("DB_USER")?,
+        env::var("DB_PASSWORD")?,
+        env::var("DB_NAME")?,
+    );
+
+
     let _db_connection_string = format!(
         "host={} port={} user={} password={} dbname={}",
-        env::var("DB_HOST").unwrap(),
-        env::var("DB_PORT").unwrap(),
-        env::var("DB_USER").unwrap(),
-        env::var("DB_PASSWORD").unwrap(),
-        env::var("DB_NAME").unwrap()
-        
+        db_config.0, db_config.1, db_config.2, db_config.3, db_config.4
     );
 
     let (client, connection) = tokio_postgres::connect(&_db_connection_string, NoTls).await?;
@@ -31,21 +38,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             eprintln!("connection error: {}", e);
         }
     });
-
-    client.batch_execute("SELECT 1").await?;
+    
     println!("Database connected successfully!");
-   
 
-   let client_data = web::Data::new(client); 
+    client.execute(
+        "CREATE TABLE links (
+            id VARCHAR(6) PRIMARY KEY,
+            original_url TEXT NOT NULL
+        );",
+        &[]
+    ).await?;
 
-   HttpServer::new(move || {
+    let client_data = web::Data::new(client); 
+
+    HttpServer::new(move || {
         App::new()
             .app_data(client_data.clone())
             .route("/create", web::post().to(create_link))
             .route("/{id}", web::get().to(get_link))
             .route("/{id}", web::delete().to(delete_link))
      })
-    .bind(format!("{}:{}", host, port))?
+    .bind(format!("{}:{}", server_config.0, server_config.1))?
     .run()
     .await?;
 
