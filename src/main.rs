@@ -25,7 +25,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         env::var("DB_NAME")?,
     );
 
-
     let _db_connection_string = format!(
         "host={} port={} user={} password={} dbname={}",
         db_config.0, db_config.1, db_config.2, db_config.3, db_config.4
@@ -38,11 +37,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             eprintln!("connection error: {}", e);
         }
     });
-    
-    println!("Database connected successfully!");
 
     client.execute(
-        "CREATE TABLE links (
+        "CREATE TABLE IF NOT EXISTS links (
             id VARCHAR(6) PRIMARY KEY,
             original_url TEXT NOT NULL
         );",
