@@ -20,7 +20,7 @@ use uuid::Uuid;
                 "INSERT INTO links (id, original_url) VALUES ($1, $2)", 
                 &[&id, &original_link]
             ).await {
-                Ok(_) => HttpResponse::Ok().json(id),
+                Ok(_) => HttpResponse::Ok().json(serde_json::json!({ "id": id })),
                 Err(e) => {
                     eprintln!("Database error: {}", e);
                     HttpResponse::InternalServerError().json("Repeated ID")

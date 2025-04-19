@@ -1478,6 +1478,7 @@ dependencies = [
  "dotenv",
  "regex",
  "serde",
+ "serde_json",
  "tokio",
  "tokio-postgres",
  "uuid",
