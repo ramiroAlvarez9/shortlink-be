@@ -42,7 +42,9 @@ use uuid::Uuid;
         ).await {
             Ok(row) => {
                 let original_url: String = row.get("original_url");
-                HttpResponse::Ok().json(original_url)
+                HttpResponse::Found() // Use HttpResponse::Found for a 302 redirect
+                    .append_header(("Location", original_url)) // Set the Location header
+                    .finish()
             }
             Err(e) => {
                 eprintln!("Database error: {}", e);
