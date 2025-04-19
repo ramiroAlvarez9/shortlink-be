@@ -41,9 +41,13 @@ use uuid::Uuid;
             &[&id]
         ).await {
             Ok(row) => {
-                let original_url: String = row.get("original_url");
-                HttpResponse::Found() // Use HttpResponse::Found for a 302 redirect
-                    .append_header(("Location", original_url)) // Set the Location header
+                let mut original_url: String = row.get("original_url");
+                // Check if the URL has a scheme, if not, prepend "http://"
+                if !original_url.starts_with("http://") && !original_url.starts_with("https://") {
+                    original_url = format!("https://{}", original_url);
+                }
+                HttpResponse::Found()
+                    .append_header(("Location", original_url))
                     .finish()
             }
             Err(e) => {
