@@ -1,11 +1,12 @@
 mod controllers;
-use actix_web::{web, App, HttpServer};
+use actix_web::{http,web, App, HttpServer};
 use controllers::link_controller::create_link;
 use controllers::link_controller::get_link;
 use controllers::link_controller::delete_link;
 use dotenv::dotenv;
 use std::env;
 use tokio_postgres::NoTls;
+use actix_cors::Cors;
 
 
 #[actix_web::main]
@@ -49,11 +50,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client_data = web::Data::new(client); 
 
     HttpServer::new(move || {
+          let cors = Cors::default()
+            .allowed_origin("http://localhost:3000")
+            .allowed_methods(vec!["GET", "POST", "DELETE"])
+            .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
+            .allowed_header(http::header::CONTENT_TYPE)
+            .max_age(3600);
         App::new()
+            .wrap(cors)
             .app_data(client_data.clone())
             .route("/create", web::post().to(create_link))
             .route("/{id}", web::get().to(get_link))
-            .route("/{id}", web::delete().to(delete_link))
+            .route("/delete/{id}", web::delete().to(delete_link))
      })
     .bind(format!("{}:{}", server_config.0, server_config.1))?
     .run()

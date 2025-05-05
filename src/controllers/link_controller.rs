@@ -42,7 +42,6 @@ use uuid::Uuid;
         ).await {
             Ok(row) => {
                 let mut original_url: String = row.get("original_url");
-                // Check if the URL has a scheme, if not, prepend "http://"
                 if !original_url.starts_with("http://") && !original_url.starts_with("https://") {
                     original_url = format!("https://{}", original_url);
                 }
@@ -79,8 +78,6 @@ use uuid::Uuid;
             }
         }
     }
-
-
 
     fn is_valid_url(url: &str) -> bool {
         let url_regex = Regex::new(r"^(https?://)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(/[a-zA-Z0-9-._~:/?#\[\]@!$&'()*+,;=]*)?$").unwrap();
